@@ -1,0 +1,101 @@
+﻿// Câu 1: Doanh thu của mỗi nhà đầu trong từng dự án theo từng tháng
+select non empty [Dim Time].[M].children on 0,
+non empty [Dim Investor].[Investor Name].children * [Dim Project].[Project Name].[Project Name].members on 1
+from [DW Apartment]
+where ([Measures].[sum_Price])
+
+// Câu 2: Tông diện tích của 2 dự án "Anland 2" và "An Bình City"
+select measures.[sum_Square] on 0,
+non empty {[Dim Project].[Project Name].[Anland 2],[Dim Project].[Project Name].[An Bình City]} on 1
+from [DW Apartment]
+
+// Câu 3: Tổng doanh thu theo từng tháng của các dự án ở quận Ba Đình
+select non empty [Dim Time].[M].children on 0,
+non empty [Dim Project].[Project Name].children on 1
+from [DW Apartment]
+where(measures.[sum_Price],[Dim Ward].[District].[District Name].&[ba dinh])
+
+
+// Câu 4: Giá trung bình của các căn hộ có 2 phòng ngủ ở từng quận trong tháng 10
+with member [Measures].[Average_Price] as
+([Measures].[sum_Price]/[Measures].[Fact Apartment Count])
+Select [Measures].[Average_Price] on 0,
+non empty [Dim Ward].[District Name].children on 1
+From (
+	SELECT [Dim Time].[M].&[10] on 0
+	from (
+	select [Fact Apartment].[Bedrooms].&[2] on 0
+	From [DW Apartment]
+))
+
+// Câu 5: Liệt địa chỉ, tháng bán, tên dự án của tôp 10 căn hộ có giá cao nhất được đầu tư bởi Công TNHH Bắc Chương Dương.
+SELECT {[Measures].[max_Price]} on 0,
+Topcount(
+	[Dim Project].[Project Name].children*
+	[Dim Ward].[District Name].children*
+	[Dim Time].[M].children
+	,5,[Measures].[max_Price]
+	) on 1
+FROM [DW Apartment]
+where([Dim Investor].[Investor Name].&[Công TNHH Bắc Chương Dương])
+
+// Câu 6: Số lượng căn hộ bán được giảm dần theo từng hướng
+select [Measures].[Fact Apartment Count] on 0,
+non empty order(
+([Main Direction].[Direction].children - [Main Direction].[Direction].&[Không])
+,[Measures].[Fact Apartment Count] ,desc)on 1
+from [DW Apartment]
+
+// Câu 7: Thống kê các căn hộ bán được từ 1/5 đến 3/5
+select [Measures].[Fact Apartment Count] on 0,
+[Dim Time].[D].&[2021-05-01T00:00:00]:[Dim Time].[D].&[2021-05-03T00:00:00] on 1
+from [DW Apartment]
+
+// Câu 8: Số căn hộ được bán theo từng ngày trong tháng 5
+select [Measures].[Fact Apartment Count] on 0,
+[Dim Time].[D].children on 1
+from [DW Apartment]
+where ([Dim Time].[M].&[5])
+
+// Câu 9: Giá thuê trung bình trên từng mét vuông ở mỗi quận
+with member [Measures].[avg_Price on Square] as 
+( [Measures].[sum_Price] / [Measures].[sum_Square])
+
+select [Measures].[avg_Price on Square] on 0,
+non empty [Dim Project].[Project Name].children on 1
+from [DW Apartment]
+
+// Câu 10: Giá cao nhất của căn hộ có 2 phòng tắm và 2 phòng ngủ theo từng nhà đầu tư
+select [Measures].[max_Price] on 0,
+non empty order( [Dim Investor].[Investor Name].children, [Measures].[max_Price] , desc) on 1
+from [DW Apartment]
+where ([Fact Apartment].[Bedrooms].&[2] , [Fact Apartment].[Bathrooms].&[2])
+
+
+with member [Measures]
+
+select [Measures].[Fact Apartment Count] on 0,
+	non empty topcount (
+		descendants(
+			[Dim Time].[Hierarchy].[Y].&[2021].&[7],
+			[Dim Time].[Hierarchy].[D]
+		),
+		10,
+		[Measures].[Fact Apartment Count]
+) on 1
+from [DW Apartment]
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
